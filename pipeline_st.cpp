@@ -28,13 +28,28 @@ int main(int argc, char** argv) {
     ThreadSafeQueue<int> queue3;
     ThreadSafeQueue<int> queue4;
 
-    //ActiveObject<int> ao1(&queue1, [n](int number) { generateNumbers(number, &queue1, &queue2); });
-    ActiveObject<int> ao1(&queue1, [n](ThreadSafeQueue<int>* queue) { generateNumbers(queue, n); });
-    ActiveObject<int> ao2(&queue1, &queue2, [](ThreadSafeQueue<int>* in) { checkPrimeAndAdd11(in, &queue2); });
-   // ActiveObject<int> ao2(&queue1, &queue2, [&queue2](int number) { checkPrimeAndAdd11(number, &queue2); });
-    ActiveObject<int> ao3(&queue2, &queue3, [](ThreadSafeQueue<int>* in) { checkPrimeAndSubtract13(in, &queue3); });
-    ActiveObject<int> ao4(&queue3, [](ThreadSafeQueue<int>* queue) { printAndAdd2(queue); });
+    ActiveObject<int> ao1(&queue1, [&queue1, &queue2, n](int) { generateNumbers(&queue1, n); });
+    //ActiveObject<int> ao2(&queue1, &queue2, [&queue1, &queue2](ThreadSafeQueue<int>* inputQueue, ThreadSafeQueue<int>* outputQueue) { checkPrimeAndAdd11(inputQueue, outputQueue); });
+ActiveObject<int> ao2(&queue2, [&queue1, &queue2](int) { checkPrimeAndAdd11(&queue1, &queue2); });
 
+// ActiveObject<int> ao3(&queue3, [&queue3,&queue2](ThreadSafeQueue<int>* in) { checkPrimeAndSubtract13(in, &queue3); });
+std::function<void(int)> func = [&queue3,&queue2](ThreadSafeQueue<int>* in) { checkPrimeAndSubtract13(in, &queue3); };
+ActiveObject<int> ao3(&queue3, func);
+
+std::function<void(int)> func1 = [](ThreadSafeQueue<int>* queue) { printAndAdd2(queue); };
+ActiveObject<int> ao4(&queue3, func1);
+
+// void checkPrimeAndSubtract13_wrapper(ThreadSafeQueue<int>* in, ThreadSafeQueue<int>* out) {
+//     checkPrimeAndSubtract13(in, out);
+// }
+
+// ActiveObject<int, decltype(checkPrimeAndSubtract13_wrapper)*> ao3(&queue3, checkPrimeAndSubtract13_wrapper);
+
+// void printAndAdd2_wrapper(ThreadSafeQueue<int>* queue) {
+//     printAndAdd2(queue);
+// }
+
+// ActiveObject<int, decltype(printAndAdd2_wrapper)*> ao4(&queue3, printAndAdd2_wrapper);
 
     ao1.start();
     ao2.start();
